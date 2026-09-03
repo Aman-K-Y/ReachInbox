@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reachinbox
+    ports: ["5432:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports: ["9200:9200"]
+    volumes: [elastic-data:/usr/share/elasticsearch/data]
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on: [postgres, redis, elasticsearch]
+    ports: ["4000:4000"]
+  frontend:
+    build: ./frontend
+    env_file: ./frontend/.env
+    depends_on: [backend]
+    ports: ["3000:3000"]
+volumes:
+  postgres-data:
+  elastic-data:
